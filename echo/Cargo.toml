@@ -1,0 +1,19 @@
+[package]
+name = "echo"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+aya = { git = "https://github.com/aya-rs/aya", branch="main" }
+aya-log = { git = "https://github.com/aya-rs/aya-log", branch="main" }
+echo-common = { path = "../echo-common", features=["userspace"] }
+anyhow = "1.0.42"
+tokio = { version = "1.2.0", features = ["macros", "rt", "rt-multi-thread", "net", "io-util", "signal", "sync"] }
+bytes = "1.1"
+simplelog = "0.10"
+structopt = { version = "0.3"}
+
+[[bin]]
+name = "echo"
+path = "src/main.rs"
