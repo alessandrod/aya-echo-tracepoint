@@ -32,9 +32,9 @@ pub fn echo_trace_open(ctx: TracePointContext) -> c_long {
 fn try_echo_trace_open(ctx: TracePointContext) -> Result<c_long, c_long> {
     // Load the pointer to the filename. The offset value can be found running:
     // sudo cat /sys/kernel/debug/tracing/events/syscalls/sys_enter_open/format
-    const FILENAME_OFFSET: usize = 16;
+    const FILENAME_OFFSET: usize = 24;
     let filename_addr: u64 = unsafe { ctx.read_at(FILENAME_OFFSET)? };
-
+    
     // get the map-backed buffer that we're going to use as storage for the filename
     let buf = unsafe { BUF.get_mut(0) }.ok_or(0)?;
 
