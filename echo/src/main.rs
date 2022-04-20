@@ -1,30 +1,20 @@
-use std::convert::TryInto;
-
+use aya::{include_bytes_aligned, Bpf};
+use aya::programs::TracePoint;
+use log::info;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 use structopt::StructOpt;
-
-use aya::programs::TracePoint;
-use aya::Bpf;
-use aya_log::BpfLogger;
 use tokio::signal;
-
-#[tokio::main]
-async fn main() {
-    if let Err(e) = try_main().await {
-        eprintln!("error: {:#}", e);
-    }
-}
+use aya_log::BpfLogger;
 
 #[derive(Debug, StructOpt)]
 struct Opt {
-    #[structopt(short, long)]
-    path: String,
+    
 }
 
-async fn try_main() -> Result<(), anyhow::Error> {
-    let opt = Opt::from_args();
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
+    let _opt = Opt::from_args();
 
-    // initialize the terminal logger
     TermLogger::init(
         LevelFilter::Debug,
         ConfigBuilder::new()
@@ -33,27 +23,28 @@ async fn try_main() -> Result<(), anyhow::Error> {
             .build(),
         TerminalMode::Mixed,
         ColorChoice::Auto,
-    )
-    .unwrap();
+    )?;
 
-    // load the eBPF code
-    let mut bpf = Bpf::load_file(&opt.path)?;
-
-    // initialize aya-log
+    // This will include your eBPF object file as raw bytes at compile-time and load it at
+    // runtime. This approach is recommended for most real-world use cases. If you would
+    // like to specify the eBPF program at runtime rather than at compile-time, you can
+    // reach for `Bpf::load_file` instead.
+    #[cfg(debug_assertions)]
+    let mut bpf = Bpf::load(include_bytes_aligned!(
+        "../../target/bpfel-unknown-none/release/echo"
+    ))?;
+    #[cfg(not(debug_assertions))]
+    let mut bpf = Bpf::load(include_bytes_aligned!(
+        "../../target/bpfel-unknown-none/release/echo"
+    ))?;
     BpfLogger::init(&mut bpf).unwrap();
-
-    // load the tracepoint
-    let program: &mut TracePoint = bpf.program_mut("echo_trace_open")?.try_into()?;
+    let program: &mut TracePoint = bpf.program_mut("echo").unwrap().try_into()?;
     program.load()?;
-    // attach the tracepoint to sys_enter_open
-    program.attach("syscalls", "sys_enter_open")?;
+    program.attach("syscalls", "sys_enter_openat")?;
 
-    // wait for SIGINT or SIGTERM
-    wait_until_terminated().await
-}
-
-async fn wait_until_terminated() -> Result<(), anyhow::Error> {
+    info!("Waiting for Ctrl-C...");
     signal::ctrl_c().await?;
-    println!("Exiting...");
+    info!("Exiting...");
+
     Ok(())
 }

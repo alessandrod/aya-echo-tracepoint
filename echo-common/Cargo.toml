@@ -1,11 +1,11 @@
 [package]
 name = "echo-common"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 [features]
 default = []
-userspace = [ "aya" ]
+user = [ "aya" ]
 
 [dependencies]
 aya = { git = "https://github.com/aya-rs/aya", branch="main", optional=true }
