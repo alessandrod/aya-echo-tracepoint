@@ -35,9 +35,6 @@ pub struct Options {
     /// Set the endianness of the BPF target
     #[structopt(default_value = "bpfel-unknown-none", long)]
     pub target: Architecture,
-    /// Build the release target
-    #[structopt(long)]
-    pub release: bool,
 }
 
 pub fn build_ebpf(opts: Options) -> Result<(), anyhow::Error> {
@@ -50,10 +47,8 @@ pub fn build_ebpf(opts: Options) -> Result<(), anyhow::Error> {
         target.as_str(),
         "-Z",
         "build-std=core",
+        "--release",
     ];
-    if opts.release {
-        args.push("--release")
-    }
     let status = Command::new("cargo")
         .current_dir(&dir)
         .args(&args)

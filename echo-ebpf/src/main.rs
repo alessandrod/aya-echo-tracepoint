@@ -11,11 +11,11 @@ use aya_bpf::{
 
 use aya_log_ebpf::info;
 
-const LOG_BUF_CAPACITY: usize = 1024;
+const MAX_PATH: usize = 4096;
 
 #[repr(C)]
 pub struct Buf {
-    pub buf: [u8; LOG_BUF_CAPACITY],
+    pub buf: [u8; MAX_PATH],
 }
 
 #[map]
@@ -49,7 +49,7 @@ fn try_echo_trace_open(ctx: TracePointContext) -> Result<c_long, c_long> {
         )?)
     };
 
-    if filename.len() < 512 {
+    if filename.len() < MAX_PATH {
         // log the filename
         info!(&ctx, "open {}", filename);
     }
